@@ -1,0 +1,50 @@
+#!/usr/local/bin/python3
+import os
+import re
+import pdb
+import argparse
+import subprocess
+
+default_outdir = '/Users/kitty/Desktop/Videos/snippets'
+
+parser = argparse.ArgumentParser(description='Snip yt clips')
+parser.add_argument('url', help='url')
+parser.add_argument('--outdir', metavar='N', type=str, default=default_outdir, nargs='?', help='m1')
+parser.add_argument('--title', metavar='N', type=str, default=None, nargs='?', help='m1')
+parser.add_argument('m1', metavar='N', type=int, nargs='?', help='m1')
+parser.add_argument('s1', metavar='N', type=int, nargs='?', help='s1')
+parser.add_argument('m2', metavar='N', type=int, nargs='?', help='m2')
+parser.add_argument('s2', metavar='N', type=int, nargs='?', help='s2')
+
+args = parser.parse_args()
+print(args)
+
+url = str(args.url)
+outdir = str(args.outdir)
+start_seconds = str(args.m1 * 60 + args.s1)
+end_seconds = str(args.m2 * 60 + args.s2)
+diff = str(int(end_seconds) - int(start_seconds))
+quality = '-f bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=webm]+bestaudio[ext=webm]/best'
+#quality = '-f best'
+# filetype = '--merge-output-format mp4'
+timestamp = str(args.m1) + '.' + str(args.s1) + '-' + str(args.m2) + '.' + str(args.s2)
+title = '"%(title)s.%(ext)s.' + timestamp + '"'
+ssl = '--no-check-certificate'
+cover = '-c:v copy'
+outfile = outdir + '/' + title
+
+if args.title:
+    resulting_file = args.title
+else:
+    resulting_file = subprocess.check_output(['youtube-dl', '--get-filename', url, quality, ssl]).decode('utf-8').strip()
+    resulting_file = re.escape(resulting_file)
+    print("resultingfile", resulting_file)
+
+outfile = outdir + '/' + resulting_file
+dlcmd = ' '.join(['youtube-dl', url, '-o', outfile, quality, ssl])
+print("dlcmd", dlcmd)
+os.system(dlcmd)
+
+ffcmd = ' '.join(['ffmpeg', '-i', outfile, '-ss', start_seconds,  '-t', diff, '-f', 'mp4', outfile])
+print(ffcmd)
+os.system(ffcmd)
