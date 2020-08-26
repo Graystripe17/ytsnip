@@ -5,7 +5,7 @@ import pdb
 import argparse
 import subprocess
 
-default_outdir = '/Users/kitty/Desktop/Videos/snippets'
+default_outdir = os.getcwd()
 
 parser = argparse.ArgumentParser(description='Snip yt clips')
 parser.add_argument('url', help='url')
@@ -41,10 +41,11 @@ else:
     print("resultingfile", resulting_file)
 
 outfile = outdir + '/' + resulting_file
+snipped_outfile = outdir + '/s' + resulting_file
 dlcmd = ' '.join(['youtube-dl', url, '-o', outfile, quality, ssl])
 print("dlcmd", dlcmd)
 os.system(dlcmd)
 
-ffcmd = ' '.join(['ffmpeg', '-i', outfile, '-ss', start_seconds,  '-t', diff, '-f', 'mp4', outfile])
+ffcmd = ' '.join(['ffmpeg', '-i', outfile, '-ss', start_seconds,  '-t', diff, '-f', 'mp4', snipped_outfile])
 print(ffcmd)
 os.system(ffcmd)
