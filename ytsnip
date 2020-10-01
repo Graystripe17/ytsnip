@@ -11,10 +11,10 @@ parser = argparse.ArgumentParser(description='Snip yt clips')
 parser.add_argument('url', help='url')
 parser.add_argument('--outdir', metavar='N', type=str, default=default_outdir, nargs='?', help='m1')
 parser.add_argument('--title', metavar='N', type=str, default=None, nargs='?', help='m1')
-parser.add_argument('m1', metavar='N', type=int, nargs='?', help='m1')
-parser.add_argument('s1', metavar='N', type=int, nargs='?', help='s1')
-parser.add_argument('m2', metavar='N', type=int, nargs='?', help='m2')
-parser.add_argument('s2', metavar='N', type=int, nargs='?', help='s2')
+parser.add_argument('m1', metavar='m1', type=int, nargs='?', help='m1')
+parser.add_argument('s1', metavar='s1', type=int, nargs='?', help='s1')
+parser.add_argument('m2', metavar='m2', type=int, nargs='?', help='m2')
+parser.add_argument('s2', metavar='s2', type=int, nargs='?', help='s2')
 
 args = parser.parse_args()
 print(args)
@@ -31,20 +31,28 @@ timestamp = str(args.m1) + '.' + str(args.s1) + '-' + str(args.m2) + '.' + str(a
 title = '"%(title)s.%(ext)s.' + timestamp + '"'
 ssl = '--no-check-certificate'
 cover = '-c:v copy'
-outfile = outdir + '/' + title
 
-if args.title:
-    resulting_file = args.title
-else:
-    resulting_file = subprocess.check_output(['youtube-dl', '--get-filename', url, quality, ssl]).decode('utf-8').strip()
-    resulting_file = re.escape(resulting_file)
-    print("resultingfile", resulting_file)
-
+filename = subprocess.check_output(['youtube-dl', '--skip-download', '--get-filename', url, quality, ssl]).decode('utf-8').strip()
+resulting_file = re.escape(filename)
 outfile = outdir + '/' + resulting_file
-snipped_outfile = outdir + '/s' + resulting_file
-dlcmd = ' '.join(['youtube-dl', url, '-o', outfile, quality, ssl])
-print("dlcmd", dlcmd)
-os.system(dlcmd)
+snipped_outfile = outdir + '/s_' + timestamp + '_'+ resulting_file
+
+print("RESULTING_FILE", filename, os.path.isfile(filename))
+
+# Check if file cached
+if not os.path.isfile(filename):
+    if args.title:
+        resulting_file = args.title
+    else:
+        resulting_file = subprocess.check_output(['youtube-dl', '--get-filename', url, quality, ssl]).decode('utf-8').strip()
+        resulting_file = re.escape(resulting_file)
+        print("resultingfile", resulting_file)
+
+    dlcmd = ' '.join(['youtube-dl', url, '-o', outfile, quality, ssl])
+    print("dlcmd", dlcmd)
+    os.system(dlcmd)
+else:
+    print("Cached file exists. Skipping redownload")
 
 ffcmd = ' '.join(['ffmpeg', '-i', outfile, '-ss', start_seconds,  '-t', diff, '-f', 'mp4', snipped_outfile])
 print(ffcmd)
